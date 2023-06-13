@@ -1,24 +1,26 @@
 import socket
-
-header = 64
-host = "localhost"
-diss_msg = "!DISCONNECT"
-port = 5050
-host_ip = '127.0.1.1'
-addr = (host_ip, port)
-frmat = 'utf-8'
-
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(addr)
+from ser import Ser
 
 
-def send_request(msg):
-    message = msg.encode(frmat)
-    msg_len = len(message)
-    send_len = str(msg_len).encode(frmat)
-    send_len += b' ' * (header-len(send_len))
-    client.send(send_len)
-    client.send(message)
+class Client(Ser):
+    command = 0
+
+    def __init__(self):
+        self._addr = (self._host_ip, self._port)
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.client.connect(self._addr)
+
+    def send_request(self, msg):
+        message = msg.encode(self._frmt)
+        msg_len = len(message)
+        send_len = str(msg_len).encode(self._frmt)
+        send_len += b' ' * (self._header-len(send_len))
+        self.client.send(send_len)
+        self.client.send(message)
+
+    def input_cmd(self):
+        self.command = int(input())
 
 
-send_request("hi")
+cli = Client()
+cli.send_request("hi")
