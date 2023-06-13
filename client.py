@@ -3,7 +3,6 @@ from ser import Ser
 
 
 class Client(Ser):
-    command = 0
 
     def __init__(self):
         self._addr = (self._host_ip, self._port)
@@ -19,8 +18,12 @@ class Client(Ser):
         self.client.send(message)
 
     def input_cmd(self):
-        self.command = int(input())
+        self.send_request(input(">"))
 
 
 cli = Client()
 cli.send_request("hi")
+print("the availible commands are:\n cd (id)- check data and ls- list sensors")
+while True:
+    if cli.input_cmd() == cli.diss_msg:
+        break

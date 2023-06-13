@@ -12,3 +12,7 @@ ERROR OCCURED AT:
  Tue Jun 13 15:38:29 2023 
 > 'socket' object is not iterable
 ================================
+ERROR OCCURED AT:
+ Tue Jun 13 16:19:30 2023 
+> 'socket' object is not iterable
+================================

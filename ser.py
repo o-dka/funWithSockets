@@ -5,7 +5,7 @@ import time
 
 class Ser:
     __log_file = open("log.txt", 'a')
-    __connected_list = []
+    connected_list = []
     _host_name = None
     _host_ip = socket.gethostbyname(socket.gethostname())
     diss_msg = "!DISSCONNECT"
@@ -14,12 +14,14 @@ class Ser:
     _frmt = 'utf-8'
     _addr = None
 
-    def __init__(self, host):
+    def __init__(self, host, sensors):
         self._host_name = host
         self._addr = (self._host_ip, self._port)
+        self.sensors = []
+        self.sensors = sensors
 
     def __disconnect_all(self):
-        for _ in self.__connected_list:
+        for _ in self.connected_list:
             _.close()
 
     def handler(self, conn, addr):
@@ -30,11 +32,22 @@ class Ser:
             if msg_len:
                 msg_len = int(msg_len)
                 msg = conn.recv(msg_len).decode(self._frmt)
+                print(f"{addr} - {msg}")
+                if msg == "ls":
+                    for _ in self.sensors:
+                        print(_.id, _.name)
+                if msg[2:] == 'cd':
+                    print(self.sensors[msg[4]].check_data())
                 if msg == self.diss_msg:
                     conned = False
-                    self.__connected_list.pop(
-                        self.__connected_list.index(conn))
-                print(f"{addr} - {msg}")
+                    try:
+                        self.connected_list.pop(
+                            self.connected_list.index(addr))
+                    except ValueError:
+                        print("Connection terminated!")
+                    finally:
+                        break
+
         conn.close()
 
     def start(self):
@@ -44,27 +57,22 @@ class Ser:
         self.server.listen()
         print(f"Server is listening on {self.server}")
         while True:
+            conn, self._addr = self.server.accept()
             try:
-                conn, self._addr = self.server.accept()
-                try:
-                    thr = threading.Thread(
-                        target=self.handler, args=(conn, self._addr)
-                    )
-                    self.__connected_list += conn
-                    thr.start()
-                    print(
-                        f"[CONNECTIONS ACTIVE: ] {threading.active_count()-1}"
-                    )
-                except Exception as error:
-                    self.__disconnect_all()
-                    self.__log_file.write(
-                        f"ERROR OCCURED AT:\n {time.ctime()} \n"
-                    )
-                    self.__log_file.write(f"> {str(error)}\n")
-                    self.__log_file.write("================================\n")
-                    self.__log_file.close()
-                    exit(1)
-            except KeyboardInterrupt:
-                print("Closing server")
+                thr = threading.Thread(
+                    target=self.handler, args=(conn, self._addr)
+                )
+                self.connected_list += self._addr
+                thr.start()
+                print(
+                    f"[CONNECTIONS ACTIVE: ] {threading.active_count()-1}"
+                )
+            except Exception as error:
                 self.__disconnect_all()
-                exit(0)
+                self.__log_file.write(
+                    f"ERROR OCCURED AT:\n {time.ctime()} \n"
+                )
+                self.__log_file.write(f"> {str(error)}\n")
+                self.__log_file.write("================================\n")
+                self.__log_file.close()
+                exit(1)
